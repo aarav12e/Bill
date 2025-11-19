@@ -78,7 +78,7 @@ function renderSplitGrid(){
   if(members.length === 0){ splitGrid.innerHTML = '<div class="small-muted">Add members to enable individualized splits</div>'; return; }
   for(const m of members){
     const row = document.createElement('div'); row.className='split-row';
-    const label = document.createElement('div'); label.textContent = m.name; label.style.width='110px';
+    const label = document.createElement('div'); label.textContent = m.name;
     const input = document.createElement('input'); input.type='number'; input.min='0'; input.step='0.01'; input.placeholder='share amount (leave empty for auto)';
     input.dataset.memberId = m.id;
     row.appendChild(label); row.appendChild(input);

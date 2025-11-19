@@ -34,16 +34,15 @@
           <input id="expense-amount" placeholder="Amount" type="number" min="0" step="0.01" />
         </div>
         <div class="row small">
-          <label>Payer: <select id="expense-payer"><option value="">-- add members --</option></select></label>
-          <label><input id="expense-equal" type="checkbox" checked /> Split equally</label>
+          <label id="payer-label">Payer: <select id="expense-payer"><option value="">-- add members --</option></select></label>
+          <label id="split-equally-label"><input id="expense-equal" type="checkbox" checked /> Split equally</label>
           <button id="add-expense">Add Expense</button>
         </div>
 
         <h3>Or split individually (enter share amounts)</h3>
         <div id="split-grid" class="split-grid"></div>
 
-        <div class="row small" style="margin-top:8px;">
-          <button id="export-expenses">Export Expenses CSV</button>
+        <div class="row small mt-8">
           <label class="file-btn">Import Expenses CSV <input id="import-expenses" type="file" accept=".csv" /></label>
         </div>
       </section>
@@ -56,11 +55,11 @@
       <section class="card">
         <h2>Summary & Settlement</h2>
         <div id="summary" class="summary"></div>
-        <div class="row small" style="margin-top:8px;">
+        <div class="row small mt-8">
           <button id="calc-settlement">Show Who Owes Whom</button>
           <button id="clear-all">Clear All Data</button>
         </div>
-        <div id="settlement" style="margin-top:10px;"></div>
+        <div id="settlement" class="mt-10"></div>
       </section>
     </main>
 
