@@ -1,5 +1,5 @@
 :root {
-  --bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --bg: linear-gradient(135deg, #13182e 0%, #764ba2 100%);
   --bg-light: #f8f9ff;
   --card: #ffffff;
   --accent: #667eea;
@@ -19,14 +19,15 @@
 html, body { height: 100%; margin: 0 }
 
 body {
-  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-  background-image: url('res/download.jpeg');
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif ;
+  background-image: url('res/zen.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
   color: #1f2937;
   line-height: 1.6;
+  font-size: 16px;
 }
 
 .container {
@@ -112,6 +113,7 @@ main {
 
 .row.small {
   font-size: 14px;
+  color: white;
 }
 
 input[type=text],
@@ -180,6 +182,7 @@ button:disabled {
   overflow-y: auto;
   border-radius: 8px;
   border: 1px solid var(--border);
+  background-color: #eef2ff;
 }
 
 .list li {
@@ -229,7 +232,7 @@ button:disabled {
 
 .split-row div:first-child {
   font-weight: 500;
-  color: #374151;
+  color: #160404;
 }
 
 .split-row input {
@@ -345,6 +348,10 @@ main > .card:nth-child(4n+4) {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+.members-list, .settlement, .expenses-list {
+  background-color: white;
 }
 
 .mt-8 {
