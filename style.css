@@ -1,0 +1,43 @@
+:root{
+  --bg: #f6f8fb;
+  --card: #ffffff;
+  --accent: #4f46e5;
+  --muted: #6b7280;
+  --danger: #ef4444;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  background:var(--bg);
+  color:#111827;
+}
+.container{max-width:980px;margin:28px auto;padding:16px}
+header{margin-bottom:14px}
+header h1{margin:0;font-size:26px}
+header p{margin:6px 0 0;color:var(--muted)}
+main{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:18px}
+.card{background:var(--card);padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(15,23,42,0.06)}
+.row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.row.small{align-items:center}
+input[type=text], input[type=number], input[type=search], #member-name, #expense-desc, #expense-amount, select{flex:1;padding:8px;border-radius:8px;border:1px solid #e6e9ef}
+button{background:var(--accent);border:none;color:white;padding:8px 12px;border-radius:8px;cursor:pointer}
+button:disabled{opacity:0.6;cursor:not-allowed}
+.list{list-style:none;padding:0;margin:10px 0 0;max-height:240px;overflow:auto}
+.list li{display:flex;justify-content:space-between;align-items:center;padding:8px 6px;border-radius:8px}
+.list li:nth-child(odd){background:#fbfbfd}
+.member-name{font-weight:600}
+.small-muted{color:var(--muted);font-size:13px}
+.split-grid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
+.split-row{display:flex;gap:8px;align-items:center}
+.split-row input{flex:1}
+.summary{display:grid;gap:8px}
+.balance{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:#f8fafc}
+.badge{background:#eef2ff;color:var(--accent);padding:4px 8px;border-radius:999px;font-weight:600}
+.delete{background:transparent;border:1px solid #eee;padding:6px 8px;border-radius:8px;color:var(--danger);cursor:pointer}
+.file-btn{background:transparent;border:1px dashed #ddd;padding:6px 8px;border-radius:8px;cursor:pointer;display:inline-block}
+.file-btn input{display:none}
+footer{margin-top:16px;text-align:center;color:var(--muted)}
+@media(min-width:720px){.split-grid{grid-template-columns:1fr 1fr}}

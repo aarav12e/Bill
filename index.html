@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Smart Bill Splitter</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Smart Bill Splitter</h1>
+      <p>Add members, add expenses (choose payer), split equally or individually. Data saved in localStorage.</p>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>Members</h2>
+        <div class="row">
+          <input id="member-name" placeholder="Member name" />
+          <button id="add-member">Add Member</button>
+        </div>
+        <div class="row small">
+          <button id="export-members">Export Members CSV</button>
+          <label class="file-btn">Import Members CSV <input id="import-members" type="file" accept=".csv" /></label>
+        </div>
+        <ul id="members-list" class="list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Add Expense</h2>
+        <div class="row">
+          <input id="expense-desc" placeholder="Description" />
+          <input id="expense-amount" placeholder="Amount" type="number" min="0" step="0.01" />
+        </div>
+        <div class="row small">
+          <label>Payer: <select id="expense-payer"><option value="">-- add members --</option></select></label>
+          <label><input id="expense-equal" type="checkbox" checked /> Split equally</label>
+          <button id="add-expense">Add Expense</button>
+        </div>
+
+        <h3>Or split individually (enter share amounts)</h3>
+        <div id="split-grid" class="split-grid"></div>
+
+        <div class="row small" style="margin-top:8px;">
+          <button id="export-expenses">Export Expenses CSV</button>
+          <label class="file-btn">Import Expenses CSV <input id="import-expenses" type="file" accept=".csv" /></label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Expenses</h2>
+        <ul id="expenses-list" class="list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Summary & Settlement</h2>
+        <div id="summary" class="summary"></div>
+        <div class="row small" style="margin-top:8px;">
+          <button id="calc-settlement">Show Who Owes Whom</button>
+          <button id="clear-all">Clear All Data</button>
+        </div>
+        <div id="settlement" style="margin-top:10px;"></div>
+      </section>
+    </main>
+
+    <footer>
+      <small>Data saved in your browser (localStorage).</small>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
