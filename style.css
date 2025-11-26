@@ -27,8 +27,6 @@ body {
   background-attachment: fixed;
   color: #1f2937;
   line-height: 1.6;
-  font-size: 16px;
-}
 
 .container {
   max-width: 1000px;
@@ -350,6 +348,54 @@ main > .card:nth-child(4n+4) {
   background-repeat: no-repeat;
 }
 
+main > .card:nth-child(4n+5) {
+  background-image: url('res/slotback.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+main > .card:nth-child(4n+5) label {
+  color: white;
+}
+
+#paid-amount,
+#paid-date {
+  flex: 1;
+  min-width: 120px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#paid-amount:focus,
+#paid-date:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+#add-paid {
+  background: var(--accent);
+  border: none;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+#add-paid:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  transform: translateY(-1px);
+}
+
 .members-list, .settlement, .expenses-list {
   background-color: white;
 }
@@ -360,4 +406,5 @@ main > .card:nth-child(4n+4) {
 
 .mt-10 {
   margin-top: 10px;
+}
 }

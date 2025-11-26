@@ -61,6 +61,22 @@
         </div>
         <div id="settlement" class="mt-10"></div>
       </section>
+
+      <section class="card">
+        <h2>Paid Settlements</h2>
+        <div class="row">
+          <label>From: <select id="paid-from"><option value="">-- add members --</option></select></label>
+          <label>To: <select id="paid-to"><option value="">-- add members --</option></select></label>
+        </div>
+        <div class="row">
+          <input id="paid-amount" placeholder="Amount" type="number" min="0" step="0.01" />
+          <input id="paid-date" type="date" />
+        </div>
+        <div class="row small">
+          <button id="add-paid">Add Paid Settlement</button>
+        </div>
+        <div id="paid-settlements"></div>
+      </section>
     </main>
 
     <footer>

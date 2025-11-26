@@ -3,6 +3,7 @@
 // LocalStorage keys
 const LS_MEMBERS = 'bbs_members_v2';
 const LS_EXPENSES = 'bbs_expenses_v2';
+const LS_PAID = 'bbs_paid_v2';
 
 // DOM
 const memberNameInput = document.getElementById('member-name');
@@ -20,6 +21,12 @@ const clearAllBtn = document.getElementById('clear-all');
 const expensePayer = document.getElementById('expense-payer');
 const calcSettlementBtn = document.getElementById('calc-settlement');
 const settlementDiv = document.getElementById('settlement');
+const paidFromInput = document.getElementById('paid-from');
+const paidToInput = document.getElementById('paid-to');
+const paidAmountInput = document.getElementById('paid-amount');
+const paidDateInput = document.getElementById('paid-date');
+const addPaidBtn = document.getElementById('add-paid');
+const paidSettlementsDiv = document.getElementById('paid-settlements');
 
 const exportMembersBtn = document.getElementById('export-members');
 const importMembersInput = document.getElementById('import-members');
@@ -28,6 +35,7 @@ const importExpensesInput = document.getElementById('import-expenses');
 
 let members = []; // {id, name}
 let expenses = []; // {id, desc, amount, payerId, split: { memberId: share }}
+let paid = []; // {from, to, amount, date}
 
 // Utilities
 const uid = () => Math.random().toString(36).slice(2,9);
@@ -36,10 +44,12 @@ const money = n => Number(n).toFixed(2);
 function save(){
   localStorage.setItem(LS_MEMBERS, JSON.stringify(members));
   localStorage.setItem(LS_EXPENSES, JSON.stringify(expenses));
+  localStorage.setItem(LS_PAID, JSON.stringify(paid));
 }
 function load(){
   members = JSON.parse(localStorage.getItem(LS_MEMBERS) || '[]');
   expenses = JSON.parse(localStorage.getItem(LS_EXPENSES) || '[]');
+  paid = JSON.parse(localStorage.getItem(LS_PAID) || '[]');
 }
 
 // Render
@@ -65,11 +75,27 @@ function renderMembers(){
 
 function renderPayerOptions(){
   expensePayer.innerHTML = '';
-  if(members.length===0){ expensePayer.innerHTML = '<option value=\"\">-- add members --</option>'; return; }
-  expensePayer.innerHTML = '<option value=\"\">(select payer)</option>';
+  paidFromInput.innerHTML = '';
+  paidToInput.innerHTML = '';
+  if(members.length===0){
+    const msg = '<option value=\"\">-- add members --</option>';
+    expensePayer.innerHTML = msg;
+    paidFromInput.innerHTML = msg;
+    paidToInput.innerHTML = msg;
+    return;
+  }
+  const selectPayerMsg = '<option value=\"\">(select payer)</option>';
+  expensePayer.innerHTML = selectPayerMsg;
+  paidFromInput.innerHTML = selectPayerMsg;
+  paidToInput.innerHTML = selectPayerMsg;
+
   for(const m of members){
-    const opt = document.createElement('option'); opt.value = m.id; opt.textContent = m.name;
+    const opt = document.createElement('option');
+    opt.value = m.id;
+    opt.textContent = m.name;
     expensePayer.appendChild(opt);
+    paidFromInput.appendChild(opt.cloneNode(true));
+    paidToInput.appendChild(opt.cloneNode(true));
   }
 }
 
@@ -133,8 +159,11 @@ function renderSummary(){
   }
 
   const totalSpent = expenses.reduce((s,e)=>s+Number(e.amount),0);
+  const totalPaid = paid.reduce((s,p)=>s+Number(p.amount),0);
+  const totalRemaining = totalSpent - totalPaid;
+
   const footer = document.createElement('div'); footer.style.marginTop='8px'; footer.className='small-muted';
-  footer.innerHTML = `<strong>Total spent:</strong> ₹${money(totalSpent)} • Members: ${members.length}`;
+  footer.innerHTML = `<strong>Total spent:</strong> ₹${money(totalSpent)} • <strong>Total paid:</strong> ₹${money(totalPaid)} • <strong>Remaining:</strong> ₹${money(totalRemaining)} • Members: ${members.length}`;
   summaryDiv.appendChild(footer);
 }
 
@@ -207,33 +236,59 @@ function removeExpense(id){
   save(); renderAll();
 }
 
-function clearAll(){
-  if(!confirm('Clear all members and expenses?')) return;
-  members = []; expenses = []; save(); renderAll();
+function addPaidSettlement(fromId, toId, amount, date) {
+  if (!fromId || !toId) return alert('Select members');
+  if (fromId === toId) return alert('"From" and "To" members cannot be the same');
+  if (!amount || isNaN(amount) || amount <= 0) return alert('Enter a valid amount');
+  if (!date) return alert('Enter a date');
+
+  const settlement = {
+    from: fromId,
+    to: toId,
+    amount: money(amount),
+    date: date,
+  };
+
+  paid.push(settlement);
+  save();
+  renderAll();
 }
 
-function renderAll(){ renderMembers(); renderExpenses(); renderSummary(); renderSettlement([]); }
+function clearAll(){
+  if(!confirm('Clear all members, expenses, and paid settlements?')) return;
+  members = []; expenses = []; paid = []; save(); renderAll();
+}
+
+function renderAll(){ renderMembers(); renderExpenses(); renderSummary(); renderSettlement(calcSettlement()); renderPaidSettlements(); }
 
 // Settlement algorithm (greedy)
 function calcSettlement(){
   // Net balances (positive: should receive money; negative: owes money)
-  const totalsPaid = {}; const totalsOwed = {};
-  for(const m of members){ totalsPaid[m.id]=0; totalsOwed[m.id]=0; }
+  const net = {};
+  for(const m of members) net[m.id] = 0;
+
+  // from expenses
   for(const e of expenses){
-    const payerId = e.payerId;
-    totalsPaid[payerId] = (totalsPaid[payerId]||0) + Number(e.amount);
+    if(e.payerId) net[e.payerId] = (net[e.payerId]||0) + Number(e.amount);
     for(const [mid, share] of Object.entries(e.split)){
-      totalsOwed[mid] += Number(share);
+      if(net[mid] !== undefined) net[mid] -= Number(share);
     }
   }
-  const net = [];
-  for(const m of members){
-    const val = (totalsPaid[m.id]||0) - (totalsOwed[m.id]||0);
-    net.push({id:m.id, name:m.name, amt: Number(money(val))});
+
+  // from paid settlements
+  for(const p of paid){
+    if(net[p.from] !== undefined) net[p.from] += Number(p.amount);
+    if(net[p.to] !== undefined) net[p.to] -= Number(p.amount);
   }
+
+  const netArr = [];
+  for(const m of members){
+    netArr.push({id:m.id, name:m.name, amt: Number(money(net[m.id]||0))});
+  }
+
   // Split into creditors and debtors
-  let creditors = net.filter(n=>n.amt > 0).sort((a,b)=>b.amt - a.amt);
-  let debtors = net.filter(n=>n.amt < 0).map(d=> ({...d, amt: -d.amt})).sort((a,b)=>b.amt - a.amt);
+  let creditors = netArr.filter(n=>n.amt > 0).sort((a,b)=>b.amt - a.amt);
+  let debtors = netArr.filter(n=>n.amt < 0).map(d=> ({...d, amt: -d.amt})).sort((a,b)=>b.amt - a.amt);
 
   const settlements = [];
   let i=0, j=0;
@@ -241,7 +296,7 @@ function calcSettlement(){
     const debtor = debtors[i];
     const creditor = creditors[j];
     const pay = Math.min(debtor.amt, creditor.amt);
-    if(pay > 0){
+    if(pay > 0.001){
       settlements.push({ from: debtor.name, to: creditor.name, amount: money(pay) });
       debtor.amt = +(debtor.amt - pay).toFixed(2);
       creditor.amt = +(creditor.amt - pay).toFixed(2);
@@ -258,10 +313,30 @@ function renderSettlement(settlements){
   const ul = document.createElement('ul'); ul.className='list';
   for(const s of settlements){
     const li = document.createElement('li');
-    li.innerHTML = `<div><strong>${escapeHtml(s.from)}</strong> → <strong>${escapeHtml(s.to)}</strong></div><div class="badge">₹${s.amount}</div>`;
+    const left = document.createElement('div');
+    left.innerHTML = `<div><strong>${escapeHtml(s.from)}</strong> → <strong>${escapeHtml(s.to)}</strong></div>`;
+    const right = document.createElement('div');
+    right.style.display='flex'; right.style.gap='8px'; right.style.alignItems='center';
+    const amt = document.createElement('div'); amt.className = 'badge'; amt.textContent = '₹'+s.amount;
+    right.appendChild(amt);
+    li.appendChild(left); li.appendChild(right);
     ul.appendChild(li);
   }
   settlementDiv.appendChild(ul);
+}
+
+function renderPaidSettlements(){
+  paidSettlementsDiv.innerHTML = '';
+  if(paid.length === 0){ paidSettlementsDiv.innerHTML = '<div class="small-muted">No paid settlements yet.</div>'; return; }
+  const ul = document.createElement('ul'); ul.className='list';
+  for(const s of paid){
+    const from = members.find(m=>m.id===s.from);
+    const to = members.find(m=>m.id===s.to);
+    const li = document.createElement('li');
+    li.innerHTML = `<div><strong>${escapeHtml(from?from.name:'?')}</strong> → <strong>${escapeHtml(to?to.name:'?')}</strong>: <strong>₹${s.amount}</strong></div><div class="small-muted">Date: ${s.date}</div>`;
+    ul.appendChild(li);
+  }
+  paidSettlementsDiv.appendChild(ul);
 }
 
 // CSV helpers
@@ -352,6 +427,14 @@ addExpenseBtn.addEventListener('click', ()=>{
 });
 expenseAmount.addEventListener('keyup', e=>{ if(e.key==='Enter') addExpenseBtn.click(); });
 
+addPaidBtn.addEventListener('click', () => {
+  addPaidSettlement(paidFromInput.value, paidToInput.value, paidAmountInput.value, paidDateInput.value);
+  paidFromInput.value = '';
+  paidToInput.value = '';
+  paidAmountInput.value = '';
+  paidDateInput.value = '';
+});
+
 clearAllBtn.addEventListener('click', clearAll);
 calcSettlementBtn.addEventListener('click', ()=>{ const s = calcSettlement(); renderSettlement(s); });
 
@@ -365,4 +448,4 @@ importExpensesInput.addEventListener('change', (ev)=>{ const f = ev.target.files
 load(); renderAll();
 
 // Expose for debugging (optional)
-window._bbs = { get members(){ return members; }, get expenses(){ return expenses; }, calcSettlement };
+window._bbs = { get members(){ return members; }, get expenses(){ return expenses; }, get paid(){ return paid; }, calcSettlement };
