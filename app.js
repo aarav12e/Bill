@@ -21,13 +21,18 @@ const expensePayer = document.getElementById('expense-payer');
 const calcSettlementBtn = document.getElementById('calc-settlement');
 const settlementDiv = document.getElementById('settlement');
 
+const expenseCategory = document.getElementById('expense-category');
+const taxInput = document.getElementById('tax-input');
+const statsDiv = document.getElementById('stats');
+
 const exportMembersBtn = document.getElementById('export-members');
 const importMembersInput = document.getElementById('import-members');
 const exportExpensesBtn = document.getElementById('export-expenses');
 const importExpensesInput = document.getElementById('import-expenses');
 
 let members = []; // {id, name}
-let expenses = []; // {id, desc, amount, payerId, split: { memberId: share }}
+let expenses = []; // {id, desc, amount, payerId, category, split: { memberId: share }}
+let settledExpenses = []; // tracking settled items
 
 // Utilities
 const uid = () => Math.random().toString(36).slice(2,9);
@@ -88,13 +93,19 @@ function renderSplitGrid(){
 
 function renderExpenses(){
   expensesList.innerHTML = '';
-  for(const e of expenses){
+  let filtered = expenses;
+  const activeFilter = document.querySelector('.filter-btn.active');
+  if(activeFilter && activeFilter.dataset.category){
+    filtered = expenses.filter(e => e.category === activeFilter.dataset.category);
+  }
+  
+  for(const e of filtered){
     const li = document.createElement('li');
     const left = document.createElement('div');
     const payer = members.find(x=>x.id===e.payerId);
-    left.innerHTML = `<div style="font-weight:600">${escapeHtml(e.desc)}</div><div class="small-muted">Paid by: ${payer?escapeHtml(payer.name):'—'} • split among ${Object.keys(e.split).length} members</div>`;
+    left.innerHTML = `<div style="font-weight:600">${escapeHtml(e.desc)} <span class="small-muted">[${e.category || 'Other'}]</span></div><div class="small-muted">Paid by: ${payer?escapeHtml(payer.name):'—'} • split among ${Object.keys(e.split).length} members</div>`;
     const right = document.createElement('div');
-    right.style.display='flex'; right.style.gap='8px'; right.style.alignItems='center';
+    right.style.display='flex'; right.style.gap='8px'; right.style.alignItems='center'; right.style.flexWrap='wrap';
     const amt = document.createElement('div'); amt.textContent = '₹'+money(e.amount);
     const del = document.createElement('button'); del.className='delete'; del.textContent='Remove';
     del.onclick = ()=>{ if(confirm('Remove this expense?')){ removeExpense(e.id); } };
@@ -136,6 +147,8 @@ function renderSummary(){
   const footer = document.createElement('div'); footer.style.marginTop='8px'; footer.className='small-muted';
   footer.innerHTML = `<strong>Total spent:</strong> ₹${money(totalSpent)} • Members: ${members.length}`;
   summaryDiv.appendChild(footer);
+  
+  renderStats();
 }
 
 // Actions
@@ -160,8 +173,14 @@ function addExpense(desc, amount, splitIndividual){
   if(!desc || !desc.trim()) return alert('Enter description');
   let amt = Number(amount);
   if(isNaN(amt) || amt<=0) return alert('Enter a valid amount');
+  
+  // Add tax if provided
+  const taxPercent = Number(taxInput.value) || 0;
+  if(taxPercent > 0) amt = amt + (amt * taxPercent / 100);
+  
   const payer = expensePayer.value || '';
-  const e = { id: uid(), desc: desc.trim(), amount: money(amt), payerId: payer, split: {} };
+  const category = expenseCategory.value || 'Other';
+  const e = { id: uid(), desc: desc.trim(), amount: money(amt), payerId: payer, category, split: {} };
 
   if(members.length===0){
     // no members — expense remains unassigned
@@ -264,6 +283,47 @@ function renderSettlement(settlements){
   settlementDiv.appendChild(ul);
 }
 
+function renderStats(){
+  if(!statsDiv) return;
+  statsDiv.innerHTML = '';
+  
+  // Category breakdown
+  const catTotals = {};
+  for(const e of expenses){
+    const cat = e.category || 'Other';
+    catTotals[cat] = (catTotals[cat] || 0) + Number(e.amount);
+  }
+  
+  // Total expenses by member
+  const memberTotals = {};
+  for(const m of members) memberTotals[m.id] = 0;
+  for(const e of expenses){
+    if(e.payerId) memberTotals[e.payerId] = (memberTotals[e.payerId] || 0) + Number(e.amount);
+  }
+  
+  // Top spender
+  let topSpender = '';
+  let maxSpent = 0;
+  for(const m of members){
+    if(memberTotals[m.id] > maxSpent){ maxSpent = memberTotals[m.id]; topSpender = m.name; }
+  }
+  
+  const totalAll = expenses.reduce((s,e) => s + Number(e.amount), 0);
+  
+  const stats = [
+    {label: 'Total Expenses', value: '₹'+money(totalAll)},
+    {label: 'Top Spender', value: topSpender || 'N/A'},
+    {label: 'Avg per Expense', value: '₹'+money(expenses.length > 0 ? totalAll/expenses.length : 0)},
+  ];
+  
+  for(const stat of stats){
+    const card = document.createElement('div');
+    card.className = 'stat-card';
+    card.innerHTML = `<div class="stat-label">${stat.label}</div><div class="stat-value">${stat.value}</div>`;
+    statsDiv.appendChild(card);
+  }
+}
+
 // CSV helpers
 function arrayToCSV(rows){
   return rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
@@ -345,10 +405,37 @@ function escapeHtml(s){ return String(s).replaceAll('&','&amp;').replaceAll('<',
 addMemberBtn.addEventListener('click', ()=>{ addMember(memberNameInput.value); memberNameInput.value=''; memberNameInput.focus(); });
 memberNameInput.addEventListener('keyup', e=>{ if(e.key==='Enter') addMemberBtn.click(); });
 
+// Quick add buttons
+document.querySelectorAll('.quick-add').forEach(btn => {
+  btn.addEventListener('click', ()=>{ expenseAmount.value = btn.dataset.amount; expenseAmount.focus(); });
+});
+
+// Tip buttons
+document.querySelectorAll('.tip-btn').forEach(btn => {
+  btn.addEventListener('click', ()=>{
+    const tipPercent = Number(btn.dataset.tip);
+    const baseAmount = Number(expenseAmount.value) || 0;
+    const tipAmount = baseAmount * tipPercent / 100;
+    expenseAmount.value = money(baseAmount + tipAmount);
+  });
+});
+
+// Filter buttons
+document.querySelectorAll('#filter-food, #filter-drinks, #filter-transport, #filter-all').forEach(btn => {
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#filter-food, #filter-drinks, #filter-transport, #filter-all').forEach(b => b.classList.remove('active'));
+    if(btn.id !== 'filter-all'){
+      btn.classList.add('active');
+      btn.dataset.category = btn.textContent;
+    }
+    renderExpenses();
+  });
+});
+
 addExpenseBtn.addEventListener('click', ()=>{
   const splitInd = !expenseEqual.checked;
   addExpense(expenseDesc.value, expenseAmount.value, splitInd);
-  expenseDesc.value=''; expenseAmount.value=''; const inputs = splitGrid.querySelectorAll('input'); inputs.forEach(i=>i.value=''); expensePayer.value='';
+  expenseDesc.value=''; expenseAmount.value=''; taxInput.value=''; const inputs = splitGrid.querySelectorAll('input'); inputs.forEach(i=>i.value=''); expensePayer.value=''; expenseCategory.value='Food';
 });
 expenseAmount.addEventListener('keyup', e=>{ if(e.key==='Enter') addExpenseBtn.click(); });
 

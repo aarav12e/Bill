@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Smart Bill Splitter</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Smart Bill Splitter</h1>
+      <p>SAVE DATA INDIVIDUALLY.</p>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>Members</h2>
+        <div class="row">
+          <input id="member-name" placeholder="Member name" />
+          <button id="add-member">Add Member</button>
+        </div>
+        <div class="row small">
+          <button id="export-members">Export Members CSV</button>
+          <label class="file-btn">Import Members CSV <input id="import-members" type="file" accept=".csv" /></label>
+        </div>
+        <ul id="members-list" class="list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Add Expense</h2>
+        <div class="row">
+          <input id="expense-desc" placeholder="Description" />
+          <input id="expense-amount" placeholder="Amount" type="number" min="0" step="0.01" />
+        </div>
+        
+        <div class="row small">
+          <select id="expense-category">
+            <option value="Food">Food</option>
+            <option value="Drinks">Drinks</option>
+            <option value="Transport">Transport</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="row small">
+          <button class="quick-add" data-amount="100">+100</button>
+          <button class="quick-add" data-amount="500">+500</button>
+          <button class="quick-add" data-amount="1000">+1000</button>
+        </div>
+
+        <div class="row small">
+          <label id="payer-label">Payer: <select id="expense-payer"><option value="">-- add members --</option></select></label>
+          <label id="split-equally-label"><input id="expense-equal" type="checkbox" checked /> Split equally</label>
+          <button id="add-expense">Add Expense</button>
+        </div>
+
+        <h3>Tip & Tax</h3>
+        <div class="row small">
+          <button class="tip-btn" data-tip="10">Tip 10%</button>
+          <button class="tip-btn" data-tip="15">Tip 15%</button>
+          <button class="tip-btn" data-tip="20">Tip 20%</button>
+          <input id="tax-input" placeholder="Tax %" type="number" min="0" step="0.01" />
+        </div>
+
+        <h3>Or split individually (enter share amounts)</h3>
+        <div id="split-grid" class="split-grid"></div>
+
+        <div class="row small mt-8">
+          <label class="file-btn">Import Expenses CSV <input id="import-expenses" type="file" accept=".csv" /></label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Expenses</h2>
+        <div class="row small">
+          <button id="filter-food">Food</button>
+          <button id="filter-drinks">Drinks</button>
+          <button id="filter-transport">Transport</button>
+          <button id="filter-all">All</button>
+        </div>
+        <ul id="expenses-list" class="list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Expense Stats</h2>
+        <div id="stats" class="stats-grid"></div>
+      </section>
+      <section class="card settlement-section">
+        <h2>Summary & Settlement</h2>
+        <div id="summary" class="summary"></div>
+        <div class="row small mt-8">
+          <button id="calc-settlement">Show Who Owes Whom</button>
+          <button id="clear-all">Clear All Data</button>
+        </div>
+        <div id="settlement" class="mt-10"></div>
+      </section>
+    </main>
+
+    <footer>
+      <small>Data saved in your browser (localStorage).</small>
+    </footer>
+  </div>
+
+  <button class="back-to-top" id="backToTop">↑</button>
+
+  <script src="app.js"></script>
+  <script>
+    // Back to top button functionality
+    const backToTopBtn = document.getElementById('backToTop');
+    window.addEventListener('scroll', () => {
+      if (window.pageYOffset > 300) {
+        backToTopBtn.classList.add('show');
+      } else {
+        backToTopBtn.classList.remove('show');
+      }
+    });
+    backToTopBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  </script>
+</body>
+</html>
